@@ -8,14 +8,17 @@
 TempProbe::TempProbe(int pin) {
     pinMode(pin, INPUT);
     _pin = pin;
-    int _sumSamples = 0;
-    float _sampleMean = 0.;
 }
 
 void TempProbe::read() {
+    // Code adapted from: https://learn.adafruit.com/thermistor/using-a-thermistor
+    
+    uint8_t i;
+    temp = 0;
+
     // read in and sum all of the samples
-    for (int i=0; i < _NUMSAMPLES; i++) {
-        _sumSamples += analogRead(_pin);
+    for (i=0; i < _NUMSAMPLES; i++) {
+        _samples[i] = analogRead(_pin);
         delay(_SAMPLE_DELAY);
     }
 
@@ -23,12 +26,18 @@ void TempProbe::read() {
     timeRead = millis();
     
     // take the mean of the samples
-    _sampleMean = (float) (_sumSamples / _NUMSAMPLES);
-    _sampleMean = 1023. / _sampleMean - 1.;
-    _sampleMean = _SERIESRESISTOR / _sampleMean;
+    for (i=0; i < _NUMSAMPLES; i++) {
+        temp += _samples[i];
+    }
+    
+    temp /= _NUMSAMPLES;
+
+    // convert to resistance
+    temp = (1023 / temp) - 1;
+    temp = _SERIESRESISTOR / temp;
 
     // convert to deg C
-    temp = _sampleMean / _THERMISTORNOMINAL;        // (R/Ro)
+    temp /= _THERMISTORNOMINAL;                     // (R/Ro)
     temp = log(temp);                               // ln(R/Ro);
     temp /= _BCOEFFICIENT;                          // 1/B * ln(R/Ro)
     temp += 1.0 / (_TEMPERATURENOMINAL + 273.15);   // +1/To

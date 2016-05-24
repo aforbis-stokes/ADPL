@@ -8,6 +8,9 @@
  * Copyright (c) Aaron Forbis-Stokes and Mark Palmeri
  */
 
+// AREF voltage (V) used for analog input reference (instead of default 5 V)
+#define AREF 3.3 
+
 #include "Valve.h"
 // instantiate valve object on digital pin #4
 Valve valve(4); 
@@ -33,29 +36,28 @@ Ignitor ignitor(2);
 
 #include "LevelSensor.h"
 // instantiate level sensor object on analog pin A5
-LevelSensor levelSensor(A5);
-#define LEVEL_MIN 400
-#define LEVEL_MAX 1200
+LevelSensor levelSensor(A5, AREF);
+//define the current thresholds (mA) for the level sensor
+#define LEVEL_MIN_MA 6
+#define LEVEL_MAX_MA 18
 #define KEEP_PUMP_ON_TIME 30000     // ms; keep pump on for 5 min for intermediate level
 #define KEEP_PUMP_OFF_TIME 330000   // ms; keep pump off for 55 min after 5 min on time
 
 unsigned long currentTime = 0;
 
 //Code for SD card
-//#include <SPI.h>
-//#include "SD.h"
-//#include <Wire.h>
-//#include <OneWire.h>
-//
-////for SD card
-//const int chipSelect = 10;   //pin 10 for SD card
-//#define WAIT_TO_START 0      //start readings immediately
-//File dataFile;  //SD card file name
+#include <SPI.h>
+#include "SD.h"
+//#include <Wire.h> //Not necessary, I believe
+//#include <OneWire.h> //Themrmocoupe
+const int chipSelect = 10;   //pin 10 for SD card
+#define WAIT_TO_START 0      //start readings immediately
+File dataFile;  //SD card file name
 
 void setup() {
     Serial.begin(9600);
-    // pinMode(10, OUTPUT); //SD card pin
-    // dataFile = SD.open("datalog.txt", FILE_WRITE);
+    pinMode(10, OUTPUT); //SD card pin
+    dataFile = SD.open("datalog.txt", FILE_WRITE);
 
     // define the reference for the analog input pins (3.3 V), which is more
     // stable than the default 5 V since we're not using any Wheatstone bridges
@@ -79,7 +81,7 @@ void loop() {
      * The ignitor will spark for 5 s every 15 minutes (IGNITE_DELAY) while * gas is on.
     */
 
-    if (tempProbe3.temp <= INCINERATE_LOW_TEMP) {       
+    if (tempProbe3.temp <= INCINERATE_LOW_TEMP && valve.gasOn == false) {       
         valve.open();
         delay(100);
         ignitor.fire();
@@ -109,13 +111,13 @@ void loop() {
     */
     levelSensor.read();
 
-    if (levelSensor.level < LEVEL_MIN && pump.pumping) {
+    if (levelSensor.levelCurrentmA < LEVEL_MIN_MA && pump.pumping) {
         pump.turnOff();
     }
-    else if (levelSensor.level > LEVEL_MAX && !pump.pumping) {
+    else if (levelSensor.levelCurrentmA > LEVEL_MAX_MA && !pump.pumping) {
         pump.turnOn();
     }
-    else if(levelSensor.level > LEVEL_MIN && levelSensor.level <= LEVEL_MAX) {
+    else if(levelSensor.levelCurrentmA > LEVEL_MIN_MA && levelSensor.levelCurrentmA <= LEVEL_MAX_MA) {
 
         currentTime = millis();
 
@@ -133,6 +135,7 @@ void loop() {
     // writeSDcard(TempProbe[0]);
 
     // temporary debugging serial print statements
+    
     Serial.print(tempProbe1.temp);
     Serial.print(", ");
     Serial.print(tempProbe2.temp);
@@ -143,11 +146,27 @@ void loop() {
     Serial.print(", ");
     Serial.print(tempProbe5.temp);
     Serial.print(", ");
-    Serial.print(valve.gasOn);
-    Serial.print(", ");
-    Serial.println(pump.pumping);
-    Serial.println(levelSensor.level);
-
+//    Serial.print(valve.gasOn);
+//    Serial.print(", ");
+//    Serial.print(pump.pumping);
+//    Serial.print(", ");
+    Serial.println(levelSensor.levelCurrentmA);
+    dataFile.print(tempProbe1.temp);
+    dataFile.print(", ");
+    dataFile.print(tempProbe2.temp);
+    dataFile.print(", ");
+    dataFile.print(tempProbe3.temp);
+    dataFile.print(", ");
+    dataFile.print(tempProbe4.temp);
+    dataFile.print(", ");
+    dataFile.print(tempProbe5.temp);
+    dataFile.print(", ");
+    dataFile.print(valve.gasOn);
+    dataFile.print(", ");
+    dataFile.print(pump.pumping);
+    dataFile.print(", ");
+    dataFile.println(levelSensor.levelCurrentmA);
+    
 } // end loop()
 
 

@@ -1,35 +1,40 @@
-#Anaerobic Digestion Pasteurization Latrine (ADPL) 
+#Anaerobic Digestion and Pasteurization Latrine (ADPL)
 
-##Overview
-What I am trying to do is operate two systems. 
+##Projects Websites
+* Overview: http://sanitation.pratt.duke.edu/onsite-treatment
+* Data Dashboard: http://adpl.colab.duke.edu
 
-One system runs a pump using an input for a level sensor. 
-* If below the minimum, the pump remains off. 
-* If above the maximum, the pump remains on. 
-* If in between, the pump runs on a timer. 
+##Functional Specifications
+###Collection Tank
+* When the level in a collection tank is between a minimum and maximum level,
+  the pump should be on for 5 min every hour.
+* The pump is off when the level is below minimum.
+* The pump is on when the level is above maximum.
 
-The other system controls the temperature in a heating tank using temperature
-probes. 
-* If the temperature is below the minimum, a gas valve should open and an
-  ignitor should go off on a timer. 
-* Once the temperature goes above the maximum, the valve should close and
-  ignitor stop.
+###Temperature Regulation
+* Record temperatures across 5[-7] thermocouples.
+* If the heater temperature (``HTR``) is < 68 C, the gas valve opens and the
+  ignitor sparks for 5 s.
+* The valve remains open until the heather temperature reaches 72 C; the ignitor
+  should spark for 5 seconds, turn off for 15 min, and spark again for 5 s.
+* Once the temperature is 72 C, the valve should shut and ignitor remain off.
+* Temperatures are published to the web server every 2.5 min.
+* Valve status will be polled when the dashboard is refreshed.
 
-##Operation Specs 
-* Operate pump - When the level in a collection tank is between a minimum and
-  maximum level, the pump should be on for 3 minutes every hour. When the level
-  is below minimum, pump should be off. When the level is above maximum, the
-  pump should remain on. If I can run the level sensor on analog output, I want
-  to record the readings to know the depth.
+###Bucket Tips
+* Bucket tips are recorded and counted.
+* Count events are published to the web server.
 
-* Record temperatures at 5 points.
+###Repository Layout
+* ```software/ADPL_electron/```: Particle Electron code and libraries
+* ```hardware/```: control box circuit schematic, PCB layout, component spec
+  sheets and bill of materials
+* ```docs/```: API documentation [FUTURE]
+* ```software/ADPL_uno/```: Arduino code and libraries (depracated)
 
-* Operate burner - If temperature 3 is below 68 C, a gas valve should open and
-  an ignitor should spark for 5 seconds. Until the temperature reaches 72C, the
-  valve should remain open, and the ignitor should spark for 5 seconds, turn
-  off for 15 minutes, and spark again for 5 seconds. Once the temperature is
-  72 C, the valve should shut and ignitor remain off.
-
-##Licenses
-* All software is covered my the MIT License.  See [software/ADPL_complete/LICENSE](software/ADPL_complete/LICENSE).
-* All circuit schematics and PCB layouts are covered by a Creative Commons Attribution 4.0 International License (CC BY 4.0) [http://creativecommons.org/licenses/by/4.0/]
+###Licenses
+* All software is covered by the Apache v2.0 License.  See
+  [software/ADPL_*/LICENSE](software/ADPL_complete/LICENSE).
+* All circuit schematics and PCB layouts are covered by a Creative Commons
+  Attribution 4.0 International License (CC BY 4.0)
+  [http://creativecommons.org/licenses/by/4.0/]

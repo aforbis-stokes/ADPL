@@ -1,1 +1,5 @@
 .dropbox
+.DS_Store
+~*
+software/logging/node_modules
+software/logging/api/twilio_auth.js
